@@ -1,0 +1,6 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, var(--size-card-width));
+  column-gap: var(--space-2xl);
+  row-gap: var(--space-xl);
+}

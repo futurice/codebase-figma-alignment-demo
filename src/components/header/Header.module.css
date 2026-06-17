@@ -1,0 +1,30 @@
+.header {
+  width: 100%;
+  height: var(--size-header-height);
+  background: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-2xl);
+  box-sizing: border-box;
+}
+
+.logo {
+  font-family: var(--font-family);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-navy);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.navLink {
+  font-family: var(--font-family);
+  font-size: var(--font-size-nav);
+  color: var(--color-navy);
+  text-decoration: none;
+}
