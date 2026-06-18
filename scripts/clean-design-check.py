@@ -9,6 +9,7 @@ Deletes:
 Run this at the start of every /design-check pass so old findings don't
 linger as stale code comments or unused image assets.
 """
+
 import pathlib
 import re
 
