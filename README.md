@@ -12,6 +12,8 @@ A small demo showing how an AI agent can detect inconsistencies between a
 
 [Staged changes report](https://htmlpreview.github.io/?https://github.com/futurice/codebase-figma-alignment-demo/blob/main/code-changes-audit.html)
 
+[Token usage estimate](token-usage-estimate.md)
+
 ## Project overview
 
 - React + TypeScript + Vite app.
