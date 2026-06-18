@@ -19,6 +19,7 @@ export function Home() {
           title={c.title}
           description={c.description}
           imageUrl={IMAGE_URL}
+          // TODO design-check: card #3 uses secondary variant; Figma shows all primary. https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/?node-id=16-107
           variant={i === 2 ? 'secondary' :'primary'}
         />
       ))}

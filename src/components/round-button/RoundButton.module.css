@@ -2,6 +2,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* TODO design-check: hardcoded 40px — should use --size-button-height token. */
   width: 40px;
   height: 40px;
   border-radius: 50%;

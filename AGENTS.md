@@ -24,11 +24,14 @@ It reads `FIGMA_API_KEY` from `.env`.
 
 Use these tools, in order:
 
-1. `get_figma_data` with `fileKey: "i3MTtBKiPbLq7bEIJqL4yc"` and a specific
-   `nodeId` to fetch a simplified node tree with resolved styles and variables.
-   Always pass a `nodeId` — never fetch the whole file.
-2. `download_figma_images` only when you need a visual check; save to a temp
-   path, not into the repo.
+1. `get_figma_data` with `fileKey: "i3MTtBKiPbLq7bEIJqL4yc"`. First call it
+   without a `nodeId` to discover all canvases, components, and component
+   sets in the file. Then drill into specific nodes by `nodeId` for detail.
+2. `download_figma_images` to save component and page renders to
+   `report-assets/` at the repo root — these are embedded in the HTML report.
+3. Figma REST `POST /v1/files/<fileKey>/comments` (using `FIGMA_API_KEY`) to
+   annotate inconsistent nodes in Figma. Prefix every message with
+   `[design-check]`.
 
 ### Codebase
 
@@ -38,11 +41,17 @@ Use the workspace file tools to read component source, CSS modules, and
 ## The task
 
 When the user asks for a "design check" / "alignment check" / runs the
-`/design-check` prompt, produce a single report file:
+`/design-check` prompt, do all of the following:
 
-**`figma-code-audit.html`** at the repo root.
-
-Always overwrite the existing report; do not append.
+1. Produce a single HTML report at the repo root: **`figma-code-audit.html`**.
+   Always overwrite the existing report; do not append.
+2. Save Figma renders used in the report under `report-assets/` (one PNG per
+   component plus one for the page layout).
+3. For each inconsistency, add a one-line `TODO design-check:` comment at
+   the relevant spot in the codebase, with a link to the Figma node.
+4. For each inconsistency, post a Figma comment on the relevant node via the
+   REST API. Every message must start with `[design-check]`.
+5. Commit the report, code TODO comments, and assets, then push.
 
 ### What to compare
 
@@ -74,79 +83,66 @@ Three groups, in this order:
 
 ### Report format
 
-Use exactly this structure. Keep statements short, simple, clear — one line
-each. Link to files and components using workspace-relative paths.
+The report is a self-contained HTML file (inline CSS, no external JS). Group
+findings into two sections in this order:
 
-```markdown
-# Design Alignment Report
+1. **Component-level audit** — one card per component covering both directions:
+   components in Figma but missing in code, components in code but missing in
+   Figma, and components present in both with token/style mismatches.
+2. **Page layout audit** — one card per page (`src/pages/home/`), comparing
+   structure, order, alignment, gaps and section paddings.
 
-_Generated: <ISO date>_
-_Figma: <link to file>_
+For every component card, render side-by-side:
 
-## 1. Implemented vs. missing components
+- a **Figma PNG** from `report-assets/`,
+- the relevant **code snippet** (CSS module or JSX),
+- a **diff table** with a status column (✓ / ✗),
+- explicit links to the Figma node and the code file,
+- a clearly highlighted **TODO block** for each mismatch.
 
-- [ ] `<ComponentName>` exists in Figma but is missing in code.
-- [ ] `<ComponentName>` exists in code ([path](path)) but is missing in Figma.
-- [x] All components match. <!-- only if nothing to report -->
+Keep wording short and factual. Use `✓ Match` / `⚠ Mismatch` badges in the
+header of each card. Reference Figma nodes with
+`https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/?node-id=<id-with-dash>`
+and code files by workspace-relative path.
 
-<details>
-<summary>Details</summary>
+### Code TODO comments
 
-For each item above: one short paragraph on what was checked, the Figma node
-id, and the code path. Link the Figma node with
-`https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/?node-id=<id>`.
+For every mismatch reported, add a single-line comment at the source location:
 
-</details>
-
-## 2. Matching component design
-
-- [ ] `Button` uses `#1a2b4d` in code but Figma uses `--color-navy` (`#1b2a4e`). See [src/components/button/Button.module.css](src/components/button/Button.module.css).
-- [x] `Card` matches.
-
-<details>
-<summary>Details</summary>
-
-One short block per component. Format:
-
-**`ComponentName`** — [code](path) · [figma](node-link)
-- Colors: ...
-- Spacing: ...
-- Radius: ...
-- Typography: ...
-- Sizes: ...
-- Verdict: match / mismatch (list specific diffs).
-
-</details>
-
-## 3. Matching layout
-
-- [ ] Home page footer is below the cards in Figma but above in code. See [src/pages/home/index.tsx](src/pages/home/index.tsx).
-- [x] Layout matches.
-
-<details>
-<summary>Details</summary>
-
-Per page or major section: what was compared (structure, order, alignment,
-gaps) and the specific diff, with code + Figma links.
-
-</details>
+```
+// TODO design-check: <short reason> — figma <node-link>
+/* TODO design-check: <short reason> — figma <node-link> */
 ```
 
-### Rules for the report
+One line only. No multi-line blocks. Skip components that exist only in Figma
+(no code location to mark).
 
-- Use `- [x]` for an OK finding and `- [ ]` for a mismatch.
-- If a section has no mismatches, keep a single `- [x] All <foo> match.` line
-  and still include the `<details>` block summarising what was checked.
-- Link every code reference. Use workspace-relative paths, no backticks
-  around file links.
-- Do not invent components, tokens, or Figma nodes. If something can't be
-  verified through MCP, say so explicitly in the Details block.
-- Keep the top-level bullets terse. Put reasoning in `<details>`.
+### Figma comments
+
+For every mismatch reported, post a Figma comment on the corresponding node:
+
+```
+POST https://api.figma.com/v1/files/i3MTtBKiPbLq7bEIJqL4yc/comments
+Header: X-Figma-Token: $FIGMA_API_KEY
+Body:   {"message":"[design-check] <reason + action>","client_meta":{"node_id":"<id>"}}
+```
+
+Every message must start with `[design-check]` so duplicates can be detected.
+
+### Commit and push
+
+After the report, code TODOs, assets, and Figma comments are in place, commit
+the changes (`figma-code-audit.html`, `report-assets/**`, code TODO edits)
+and push to the current branch. Do not include `.env` or local-only files.
 
 ## House rules
 
-- Don't add comments to code unless intent is non-obvious. One short line max.
-- Don't create extra markdown files unless explicitly asked. The report is
-  the only generated doc.
-- Don't modify component source code as part of the design check — the
-  output is the report only.
+- Comments are allowed only when intent is non-obvious. One short line max.
+  `TODO design-check:` comments are the standard way to mark inconsistencies
+  in code.
+- Don't create extra markdown files unless explicitly asked. The HTML report
+  is the only generated doc.
+- Don't refactor or restyle component source as part of the design check.
+  Only add the inline `TODO design-check:` comments described above.
+- Do not invent components, tokens, or Figma nodes. If something can't be
+  verified, say so explicitly in the report.
