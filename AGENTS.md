@@ -124,7 +124,7 @@ For every mismatch reported, post a Figma comment on the corresponding node:
 ```
 POST https://api.figma.com/v1/files/i3MTtBKiPbLq7bEIJqL4yc/comments
 Header: X-Figma-Token: $FIGMA_API_KEY
-Body:   {"message":"[design-check] <reason + action>","client_meta":{"node_id":"<id>"}}
+Body:   {"message":"[design-check] <reason + action>","client_meta":{"node_id":"<id>","node_offset":{"x":0,"y":0}}}
 ```
 
 Every message must start with `[design-check]` so duplicates can be detected.
