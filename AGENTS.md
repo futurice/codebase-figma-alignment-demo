@@ -43,15 +43,20 @@ Use the workspace file tools to read component source, CSS modules, and
 When the user asks for a "design check" / "alignment check" / runs the
 `/design-check` prompt, do all of the following:
 
-1. Produce a single HTML report at the repo root: **`figma-code-audit.html`**.
+1. Run `python3 scripts/clean-design-check.py` first. It strips every
+   `TODO design-check:` line from `src/` and clears `report-assets/*.png`
+   and `report-assets/figma-comments.json`, so this run starts from a clean
+   slate and stale findings don't linger.
+2. Produce a single HTML report at the repo root: **`figma-code-audit.html`**.
    Always overwrite the existing report; do not append.
-2. Save Figma renders used in the report under `report-assets/` (one PNG per
+3. Save Figma renders used in the report under `report-assets/` (one PNG per
    component plus one for the page layout).
-3. For each inconsistency, add a one-line `TODO design-check:` comment at
+4. For each inconsistency, add a one-line `TODO design-check:` comment at
    the relevant spot in the codebase, with a link to the Figma node.
-4. For each inconsistency, post a Figma comment on the relevant node via the
+5. For each inconsistency, post a Figma comment on the relevant node via the
    REST API. Every message must start with `[design-check]`.
-5. Commit the report, code TODO comments, and assets, then push.
+6. Commit the report, code TODO comments, and assets locally. **Do not
+   push** — the human reviews the diff and pushes when happy.
 
 ### What to compare
 
@@ -152,8 +157,8 @@ The token must have the `file_comments:write` scope.
 
 After the report, code TODOs, assets, and Figma comments are in place, commit
 the changes (`figma-code-audit.html`, `report-assets/**` — including
-`figma-comments.json`, code TODO edits) and push to the current branch. Do
-not include `.env` or local-only files.
+`figma-comments.json`, code TODO edits) locally. Do not push — the human
+pushes after reviewing the diff. Do not stage `.env` or local-only files.
 
 ## House rules
 

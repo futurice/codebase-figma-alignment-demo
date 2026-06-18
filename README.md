@@ -42,9 +42,11 @@ pnpm dev
    [.vscode/mcp.json](.vscode/mcp.json) and starts automatically.
 
 3. In Chat (agent mode), run the `/design-check` prompt. The agent reads
-   [AGENTS.md](AGENTS.md) for the rules and writes the report to
-   [Inconsistencies report](figma-code-audit.html). Commit the
-   updated report when you're happy with it.
+   [AGENTS.md](AGENTS.md) for the rules, writes the report to
+   [figma-code-audit.html](figma-code-audit.html), drops `TODO design-check:`
+   comments at mismatched code spots, posts `[design-check]` comments on the
+   matching Figma nodes, and commits everything locally. Review the diff and
+   push when you're happy with it.
 
 ## How it works
 
