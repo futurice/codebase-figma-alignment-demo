@@ -20,8 +20,7 @@ A small demo for using an AI agent to detect inconsistencies between the
 The Figma MCP server is configured in [.vscode/mcp.json](.vscode/mcp.json) and
 runs `figma-developer-mcp` (Framelink) over stdio.
 
-It reads `FIGMA_API_KEY` from `.env`. If your `.env` has `FIGMA_TOKEN`, add a
-second line `FIGMA_API_KEY=<same value>` or rename it.
+It reads `FIGMA_API_KEY` from `.env`.
 
 Use these tools, in order:
 
