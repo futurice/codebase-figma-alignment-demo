@@ -8,7 +8,7 @@ A small demo showing how an AI agent can detect inconsistencies between a
 
 [Figma](https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/Codebase-Figma-Demo)
 
-[Inconsistencies report](./figma-code-audit.html)
+[Inconsistencies report](https://htmlpreview.github.io/?https://github.com/futurice/codebase-figma-alignment-demo/blob/main/figma-code-audit.html)
 
 ## Project overview
 

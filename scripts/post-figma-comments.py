@@ -21,6 +21,7 @@ Before posting, every existing comment whose message starts with
 `[design-check]` is deleted across the whole file, so re-runs don't pile up
 duplicates and stale findings disappear from Figma.
 """
+
 import json
 import os
 import sys
