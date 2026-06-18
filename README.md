@@ -4,7 +4,8 @@ A small demo showing how an AI agent can detect inconsistencies between a
 **Figma design** and its **codebase implementation** — in both directions
 (things in Figma but not in code, and vice versa).
 
-Preview: [Web page](https://futurice.github.io/codebase-figma-alignment-demo/)
+[Web page](https://futurice.github.io/codebase-figma-alignment-demo/)
+[Inconsistencies report](design-alignment-report.md).
 
 ## Project overview
 
@@ -65,5 +66,3 @@ Repo secrets required:
   token-aware tree.
 - [.github/workflows/design-check.yml](.github/workflows/design-check.yml) —
   CI runner using the Claude Code GitHub Action with the same MCP server.
-
-Latest report: [design-alignment-report.md](design-alignment-report.md).
