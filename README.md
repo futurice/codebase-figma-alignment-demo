@@ -5,6 +5,7 @@ A small demo showing how an AI agent can detect inconsistencies between a
 (things in Figma but not in code, and vice versa).
 
 [Web page](https://futurice.github.io/codebase-figma-alignment-demo/)
+
 [Inconsistencies report](design-alignment-report.md).
 
 ## Project overview
