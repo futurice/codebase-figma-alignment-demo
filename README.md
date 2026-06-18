@@ -6,7 +6,9 @@ A small demo showing how an AI agent can detect inconsistencies between a
 
 [Web page](https://futurice.github.io/codebase-figma-alignment-demo/)
 
-[Inconsistencies report](design-alignment-report.md).
+[Inconsistencies report](design-alignment-report.md)
+
+[Figma](https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/Codebase-Figma-Demo)
 
 ## Project overview
 
@@ -42,20 +44,8 @@ pnpm dev
 
 3. In Chat (agent mode), run the `/design-check` prompt. The agent reads
    [AGENTS.md](AGENTS.md) for the rules and writes the report to
-   [design-alignment-report.md](design-alignment-report.md).
-
-### Run the design check (automatically, in CI)
-
-A GitHub Actions workflow
-([.github/workflows/design-check.yml](.github/workflows/design-check.yml))
-runs the same check on every push to `main` and on PRs that touch components,
-pages, tokens, or the agent rules. It commits the updated report back to the
-branch.
-
-Repo secrets required:
-
-- `FIGMA_TOKEN` — Figma personal access token.
-- `ANTHROPIC_API_KEY` — for the Claude Code action that runs the agent.
+   [Inconsistencies report](design-alignment-report.md). Commit the
+   updated report when you're happy with it.
 
 ## How it works
 
@@ -65,5 +55,3 @@ Repo secrets required:
 - [.vscode/mcp.json](.vscode/mcp.json) — Figma MCP server (Framelink
   `figma-developer-mcp`) so the agent can read Figma frames as a simplified,
   token-aware tree.
-- [.github/workflows/design-check.yml](.github/workflows/design-check.yml) —
-  CI runner using the Claude Code GitHub Action with the same MCP server.
