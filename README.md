@@ -50,6 +50,11 @@ pnpm dev
    matching Figma nodes, and commits everything locally. Review the diff and
    push when you're happy with it.
 
+4. For a PR-style preview limited to currently staged files, run
+   `/design-check-changes` instead. It writes a read-only report to
+   [code-changes-audit.html](code-changes-audit.html) and does not modify
+   code, post Figma comments, or commit.
+
 ## How it works
 
 - [AGENTS.md](AGENTS.md) — task definition, what to compare, exact report format.
