@@ -23,3 +23,13 @@
   color: var(--color-navy);
   border-color: var(--color-navy);
 }
+
+.tertiary {
+  background: var(--color-green);
+  color: var(--color-white);
+}
+
+.danger {
+  background: var(--color-red);
+  color: var(--color-white);
+}

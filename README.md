@@ -10,6 +10,8 @@ A small demo showing how an AI agent can detect inconsistencies between a
 
 [Inconsistencies report](https://htmlpreview.github.io/?https://github.com/futurice/codebase-figma-alignment-demo/blob/main/figma-code-audit.html)
 
+[Staged changes report](https://htmlpreview.github.io/?https://github.com/futurice/codebase-figma-alignment-demo/blob/main/code-changes-audit.html)
+
 ## Project overview
 
 - React + TypeScript + Vite app.
