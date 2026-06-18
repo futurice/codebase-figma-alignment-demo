@@ -6,9 +6,9 @@ A small demo showing how an AI agent can detect inconsistencies between a
 
 [Web page](https://futurice.github.io/codebase-figma-alignment-demo/)
 
-[Inconsistencies report](design-alignment-report.md)
-
 [Figma](https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/Codebase-Figma-Demo)
+
+[Inconsistencies report](design-alignment-report.md)
 
 ## Project overview
 
