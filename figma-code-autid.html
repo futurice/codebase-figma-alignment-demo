@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Figma ↔ Code Audit — Codebase-Figma-Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .page { max-width: 1200px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  /* Header */
+  .page-header {
+    margin-bottom: 24px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 6px;
+  }
+  .page-header .meta {
+    font-size: 12px;
+    color: #6b7280;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .page-header .meta a { color: #3b82f6; text-decoration: none; }
+
+  /* Summary bar */
+  .summary-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    align-items: center;
+  }
+  .summary-bar .label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; margin-right: 4px; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .pill-green  { background: #dcfce7; color: #166534; }
+  .pill-orange { background: #ffedd5; color: #9a3412; }
+  .pill-yellow { background: #fef9c3; color: #713f12; }
+  .pill-red    { background: #fee2e2; color: #991b1b; }
+  .pill-grey   { background: #f3f4f6; color: #374151; }
+
+  /* Component card */
+  .component-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .card-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: #111827;
+  }
+  .issue-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-orange { background: #f97316; color: white; }
+  .badge-red    { background: #ef4444; color: white; }
+  .badge-green  { background: #22c55e; color: white; }
+
+  /* Panels */
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .panel {
+    padding: 20px;
+    background: #f9fafb;
+    position: relative;
+  }
+  .panel:first-child { border-right: 1px solid #f3f4f6; }
+  .panel-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #6b7280;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .panel-content {
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .panel-content img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+  }
+  .panel-content.panel-wide img { max-width: 100%; }
+  .not-implemented {
+    width: 100%;
+    min-height: 80px;
+    background: #fee2e2;
+    border: 2px dashed #ef4444;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #991b1b;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Callout badges on previews */
+  .callout {
+    position: absolute;
+    background: #f97316;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10;
+  }
+  .callout-red { background: #ef4444; }
+
+  /* Diff table */
+  .diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .diff-table th {
+    text-align: left;
+    padding: 8px 16px;
+    background: #f9fafb;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+  }
+  .diff-table td {
+    padding: 7px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+  }
+  .diff-table tr:last-child td { border-bottom: none; }
+  .diff-table td:first-child { color: #374151; font-family: 'SF Mono','Fira Code',monospace; font-size: 12px; }
+  .diff-table td code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono','Fira Code',monospace; font-size: 11.5px; }
+  .diff-table .token-name { color: #6b7280; font-size: 11px; margin-top: 2px; }
+
+  .row-ok     { background: #f0fdf4; }
+  .row-wrong  { background: #fff7ed; border-left: 3px solid #f97316; }
+  .row-token  { background: #fefce8; border-left: 3px solid #eab308; }
+  .row-miss   { background: #fef2f2; border-left: 3px solid #ef4444; }
+  .row-unused { background: #f9fafb; }
+
+  .status-icon { font-size: 14px; }
+
+  /* Missing component */
+  .card-header-missing { background: #fef2f2; }
+  .card-header-missing h2 { color: #991b1b; }
+  .missing-spec {
+    padding: 16px;
+    font-size: 12px;
+    color: #374151;
+    line-height: 1.8;
+  }
+  .missing-spec strong { color: #111827; }
+
+  /* Unused tokens section */
+  .unused-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .unused-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  /* Code preview components */
+  .code-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    background: #1b2a4e;
+    color: #ffffff;
+    border: 1px solid transparent;
+  }
+  .code-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    background: #ffffff;
+    color: #1b2a4e;
+    border: 1px solid #1b2a4e;
+  }
+  .code-card {
+    width: 280px;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .code-card-image {
+    height: 160px;
+    background-color: #c7c9ce;
+    background-size: cover;
+    background-position: center;
+  }
+  .code-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+  }
+  .code-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1b2a4e;
+    margin: 0;
+  }
+  .code-card-desc {
+    font-size: 12px;
+    font-weight: 400;
+    color: #1b2a4e;
+    margin: 4px 0 0;
+  }
+  .code-header {
+    width: 560px;
+    max-width: 100%;
+    height: 72px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    font-family: 'Inter', system-ui, sans-serif;
+    border: 1px solid #e5e7eb;
+  }
+  .code-header-logo {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1b2a4e;
+  }
+  .code-header-nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .code-header-link {
+    font-size: 14px;
+    color: #1b2a4e;
+    text-decoration: none;
+  }
+  .code-footer {
+    width: 560px;
+    max-width: 100%;
+    height: 80px;
+    background: #1b2a4e;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 40px;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+  }
+
+  @media (max-width: 700px) {
+    .panels { grid-template-columns: 1fr; }
+    .panel:first-child { border-right: none; border-bottom: 1px solid #f3f4f6; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <h1>Figma ↔ Code Audit</h1>
+    <div class="meta">
+      <span>File: <strong>Codebase-Figma-Demo</strong></span>
+      <span>Node: <a href="https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/Codebase-Figma-Demo?node-id=12-22" target="_blank">12-22 (Components)</a></span>
+      <span>Codebase: <code>src/components/</code></span>
+      <span>Generated: 2026-06-18</span>
+    </div>
+  </div>
+
+  <!-- Summary bar -->
+  <div class="summary-bar">
+    <span class="label">Summary</span>
+    <span class="pill pill-green">✅ 28 correct</span>
+    <span class="pill pill-orange">🟠 3 wrong value</span>
+    <span class="pill pill-yellow">🟡 0 token mismatch</span>
+    <span class="pill pill-red">🔴 1 missing</span>
+    <span class="pill pill-grey">⚪ 1 unused token</span>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       BUTTON (primary)
+  ═══════════════════════════════════════════════════ -->
+  <div class="component-card">
+    <div class="card-header">
+      <h2>button / variant=primary</h2>
+      <span class="issue-badge badge-orange">2 issues</span>
+    </div>
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-label">Figma</div>
+        <div class="panel-content">
+          <img src="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/2a2e4c5e-ef6e-4f5b-a8b1-e9bc2568d4bf" alt="Button primary – Figma" style="image-rendering:auto; width:auto; max-height:80px;" />
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Code</div>
+        <div class="panel-content" style="position:relative;">
+          <button class="code-btn-primary">Button</button>
+          <span class="callout" style="top:4px;right:4px;">border ≠</span>
+          <span class="callout" style="bottom:4px;right:4px;">line-height ≠</span>
+        </div>
+      </div>
+    </div>
+    <table class="diff-table">
+      <thead>
+        <tr>
+          <th style="width:18%">Property</th>
+          <th style="width:30%">Figma value</th>
+          <th style="width:30%">Code value</th>
+          <th style="width:12%">Token</th>
+          <th style="width:10%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-ok">
+          <td>background</td>
+          <td><code>#1B2A4E</code><div class="token-name">color/navy</div></td>
+          <td><code>var(--color-navy)</code> → #1B2A4E</td>
+          <td>color/navy</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>color</td>
+          <td><code>#FFFFFF</code><div class="token-name">color/white</div></td>
+          <td><code>var(--color-white)</code></td>
+          <td>color/white</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>padding</td>
+          <td><code>8px 16px</code><div class="token-name">space/sm · space/md</div></td>
+          <td><code>var(--space-sm) var(--space-md)</code></td>
+          <td>✓</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>gap</td>
+          <td><code>8px</code><div class="token-name">space/sm</div></td>
+          <td><code>var(--space-sm)</code></td>
+          <td>space/sm</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>border-radius</td>
+          <td><code>8px</code><div class="token-name">radius/md</div></td>
+          <td><code>var(--radius-md)</code></td>
+          <td>radius/md</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-wrong">
+          <td>border</td>
+          <td><code>none</code><div class="token-name">strokes: []</div></td>
+          <td><code>1px solid transparent</code><div class="token-name">Adds 2px to width &amp; height (content-box)</div></td>
+          <td>—</td>
+          <td class="status-icon">🟠</td>
+        </tr>
+        <tr class="row-wrong">
+          <td>line-height</td>
+          <td><code>~1.21</code><div class="token-name">Intrinsic (Inter 14px)</div></td>
+          <td><code>1</code><div class="token-name">Button renders ~3px shorter than design</div></td>
+          <td>—</td>
+          <td class="status-icon">🟠</td>
+        </tr>
+        <tr class="row-ok">
+          <td>font-size</td>
+          <td><code>14px</code><div class="token-name">font/size-body</div></td>
+          <td><code>var(--font-size-body)</code></td>
+          <td>✓</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>font-weight</td>
+          <td><code>600</code><div class="token-name">font/style-semibold</div></td>
+          <td><code>var(--font-weight-semibold)</code> = 600</td>
+          <td>✓</td>
+          <td class="status-icon">✅</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       BUTTON (secondary)
+  ═══════════════════════════════════════════════════ -->
+  <div class="component-card">
+    <div class="card-header">
+      <h2>button / variant=secondary</h2>
+      <span class="issue-badge badge-orange">2 issues</span>
+    </div>
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-label">Figma</div>
+        <div class="panel-content">
+          <img src="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/c3eb58e0-c2d8-4db3-be7a-f6778bd7473d" alt="Button secondary – Figma" style="width:auto; max-height:80px;" />
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Code</div>
+        <div class="panel-content" style="position:relative;">
+          <button class="code-btn-secondary">Button</button>
+          <span class="callout" style="top:4px;right:4px;">border sizing ≠</span>
+          <span class="callout" style="bottom:4px;right:4px;">line-height ≠</span>
+        </div>
+      </div>
+    </div>
+    <table class="diff-table">
+      <thead>
+        <tr>
+          <th style="width:18%">Property</th>
+          <th style="width:30%">Figma value</th>
+          <th style="width:30%">Code value</th>
+          <th style="width:12%">Token</th>
+          <th style="width:10%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-ok">
+          <td>background</td>
+          <td><code>#FFFFFF</code><div class="token-name">color/white</div></td>
+          <td><code>var(--color-white)</code></td>
+          <td>color/white</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>color</td>
+          <td><code>#1B2A4E</code><div class="token-name">color/navy</div></td>
+          <td><code>var(--color-navy)</code></td>
+          <td>color/navy</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>border-color</td>
+          <td><code>#1B2A4E</code><div class="token-name">color/navy · strokeAlign: INSIDE</div></td>
+          <td><code>var(--color-navy)</code></td>
+          <td>color/navy</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-wrong">
+          <td>border sizing</td>
+          <td><code>strokeAlign: INSIDE</code><div class="token-name">Border doesn't add to dimensions</div></td>
+          <td><code>box-sizing: content-box</code><div class="token-name">1px border adds 2px to each dimension</div></td>
+          <td>—</td>
+          <td class="status-icon">🟠</td>
+        </tr>
+        <tr class="row-wrong">
+          <td>line-height</td>
+          <td><code>~1.21</code><div class="token-name">Intrinsic (Inter 14px)</div></td>
+          <td><code>1</code><div class="token-name">Button renders ~3px shorter than design</div></td>
+          <td>—</td>
+          <td class="status-icon">🟠</td>
+        </tr>
+        <tr class="row-ok">
+          <td>border-width</td>
+          <td><code>1px</code><div class="token-name">size/border</div></td>
+          <td><code>var(--size-border)</code></td>
+          <td>size/border</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>border-radius</td>
+          <td><code>8px</code><div class="token-name">radius/md</div></td>
+          <td><code>var(--radius-md)</code></td>
+          <td>radius/md</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>padding</td>
+          <td><code>8px 16px</code><div class="token-name">space/sm · space/md</div></td>
+          <td><code>var(--space-sm) var(--space-md)</code></td>
+          <td>✓</td>
+          <td class="status-icon">✅</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       CARD
+  ═══════════════════════════════════════════════════ -->
+  <div class="component-card">
+    <div class="card-header">
+      <h2>card</h2>
+      <span class="issue-badge badge-green">All correct</span>
+    </div>
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-label">Figma</div>
+        <div class="panel-content">
+          <img src="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/6ce8a834-8d14-45a9-8b78-752b55c24020" alt="Card – Figma" style="width:200px; height:auto;" />
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Code</div>
+        <div class="panel-content">
+          <div class="code-card">
+            <div class="code-card-image"></div>
+            <div class="code-card-content">
+              <div>
+                <p class="code-card-title">Card Title</p>
+                <p class="code-card-desc">Short description of the card content goes here.</p>
+              </div>
+              <div style="display:flex;justify-content:flex-end;">
+                <button class="code-btn-primary" style="font-size:13px;padding:7px 14px;">Button</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <table class="diff-table">
+      <thead>
+        <tr>
+          <th style="width:18%">Property</th>
+          <th style="width:30%">Figma value</th>
+          <th style="width:30%">Code value</th>
+          <th style="width:12%">Token</th>
+          <th style="width:10%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-ok">
+          <td>width</td>
+          <td><code>320px</code><div class="token-name">size/card-width</div></td>
+          <td><code>var(--size-card-width)</code></td>
+          <td>size/card-width</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>border-radius</td>
+          <td><code>12px</code><div class="token-name">radius/lg</div></td>
+          <td><code>var(--radius-lg)</code></td>
+          <td>radius/lg</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>background</td>
+          <td><code>#FFFFFF</code><div class="token-name">color/white</div></td>
+          <td><code>var(--color-white)</code></td>
+          <td>color/white</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>overflow</td>
+          <td><code>clipsContent: true</code></td>
+          <td><code>overflow: hidden</code></td>
+          <td>—</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>image height</td>
+          <td><code>160px</code><div class="token-name">size/card-image-height</div></td>
+          <td><code>var(--size-card-image-height)</code></td>
+          <td>size/card-image-height</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>content padding</td>
+          <td><code>24px</code><div class="token-name">space/lg (all sides)</div></td>
+          <td><code>var(--space-lg)</code></td>
+          <td>space/lg</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>content gap</td>
+          <td><code>16px</code><div class="token-name">space/md</div></td>
+          <td><code>var(--space-md)</code></td>
+          <td>space/md</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>title font-size</td>
+          <td><code>16px</code><div class="token-name">font/size-title</div></td>
+          <td><code>var(--font-size-title)</code></td>
+          <td>font/size-title</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>title font-weight</td>
+          <td><code>700</code><div class="token-name">font/style-bold</div></td>
+          <td><code>var(--font-weight-bold)</code></td>
+          <td>font/style-bold</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>desc font-size</td>
+          <td><code>12px</code><div class="token-name">font/size-subtitle</div></td>
+          <td><code>var(--font-size-subtitle)</code></td>
+          <td>font/size-subtitle</td>
+          <td class="status-icon">✅</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════════════════ -->
+  <div class="component-card">
+    <div class="card-header">
+      <h2>header</h2>
+      <span class="issue-badge badge-green">All correct</span>
+    </div>
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-label">Figma</div>
+        <div class="panel-content panel-wide">
+          <img src="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/d951af06-ac56-4a5d-96fd-dbd9032a8ec7" alt="Header – Figma" style="width:100%; max-width:520px; height:auto;" />
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Code</div>
+        <div class="panel-content">
+          <div class="code-header">
+            <span class="code-header-logo">Acme</span>
+            <nav class="code-header-nav">
+              <a class="code-header-link">Home</a>
+              <a class="code-header-link">About</a>
+              <a class="code-header-link">Contact</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+    <table class="diff-table">
+      <thead>
+        <tr>
+          <th style="width:18%">Property</th>
+          <th style="width:30%">Figma value</th>
+          <th style="width:30%">Code value</th>
+          <th style="width:12%">Token</th>
+          <th style="width:10%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-ok">
+          <td>height</td>
+          <td><code>72px</code><div class="token-name">size/header-height</div></td>
+          <td><code>var(--size-header-height)</code></td>
+          <td>size/header-height</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>background</td>
+          <td><code>#FFFFFF</code><div class="token-name">color/white</div></td>
+          <td><code>var(--color-white)</code></td>
+          <td>color/white</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>padding</td>
+          <td><code>0 64px</code><div class="token-name">space/2xl</div></td>
+          <td><code>0 var(--space-2xl)</code></td>
+          <td>space/2xl</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>layout</td>
+          <td><code>space-between · center</code></td>
+          <td><code>space-between · center</code></td>
+          <td>—</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>logo font-size</td>
+          <td><code>16px</code><div class="token-name">font/size-title</div></td>
+          <td><code>var(--font-size-title)</code></td>
+          <td>font/size-title</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>logo font-weight</td>
+          <td><code>700</code><div class="token-name">font/style-bold</div></td>
+          <td><code>var(--font-weight-bold)</code></td>
+          <td>font/style-bold</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>logo color</td>
+          <td><code>#1B2A4E</code><div class="token-name">color/navy</div></td>
+          <td><code>var(--color-navy)</code></td>
+          <td>color/navy</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>nav gap</td>
+          <td><code>24px</code><div class="token-name">space/lg</div></td>
+          <td><code>var(--space-lg)</code></td>
+          <td>space/lg</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>nav font-size</td>
+          <td><code>14px</code><div class="token-name">font/size-nav</div></td>
+          <td><code>var(--font-size-nav)</code></td>
+          <td>font/size-nav</td>
+          <td class="status-icon">✅</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════════════════════ -->
+  <div class="component-card">
+    <div class="card-header">
+      <h2>footer</h2>
+      <span class="issue-badge badge-green">All correct</span>
+    </div>
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-label">Figma</div>
+        <div class="panel-content panel-wide">
+          <img src="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/db784c27-0460-4a33-89a2-8d1c47d41143" alt="Footer – Figma" style="width:100%; max-width:520px; height:auto;" />
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Code</div>
+        <div class="panel-content">
+          <div class="code-footer">© 2026 Acme. All rights reserved.</div>
+        </div>
+      </div>
+    </div>
+    <table class="diff-table">
+      <thead>
+        <tr>
+          <th style="width:18%">Property</th>
+          <th style="width:30%">Figma value</th>
+          <th style="width:30%">Code value</th>
+          <th style="width:12%">Token</th>
+          <th style="width:10%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-ok">
+          <td>height</td>
+          <td><code>80px</code><div class="token-name">size/footer-height</div></td>
+          <td><code>var(--size-footer-height)</code></td>
+          <td>size/footer-height</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>background</td>
+          <td><code>#1B2A4E</code><div class="token-name">color/navy</div></td>
+          <td><code>var(--color-navy)</code></td>
+          <td>color/navy</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>color</td>
+          <td><code>#FFFFFF</code><div class="token-name">color/white</div></td>
+          <td><code>var(--color-white)</code></td>
+          <td>color/white</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>padding</td>
+          <td><code>0 64px</code><div class="token-name">space/2xl</div></td>
+          <td><code>0 var(--space-2xl)</code></td>
+          <td>space/2xl</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>font-size</td>
+          <td><code>14px</code><div class="token-name">font/size-body</div></td>
+          <td><code>var(--font-size-body)</code></td>
+          <td>font/size-body</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>font-weight</td>
+          <td><code>400</code><div class="token-name">font/style-regular</div></td>
+          <td>unset (browser default 400)</td>
+          <td>—</td>
+          <td class="status-icon">✅</td>
+        </tr>
+        <tr class="row-ok">
+          <td>layout</td>
+          <td><code>center · center</code></td>
+          <td><code>center · center</code></td>
+          <td>—</td>
+          <td class="status-icon">✅</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       CONTACT-CARD (missing)
+  ═══════════════════════════════════════════════════ -->
+  <div class="component-card">
+    <div class="card-header card-header-missing">
+      <h2>contact-card</h2>
+      <span class="issue-badge badge-red">🔴 Missing — not in codebase</span>
+    </div>
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-label">Figma</div>
+        <div class="panel-content">
+          <img src="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/60188d19-0790-4b96-9ce6-b5f342073ce2" alt="Contact card – Figma" style="width:auto; max-height:120px;" />
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-label">Code</div>
+        <div class="panel-content">
+          <div class="not-implemented">No component found in <code>src/components/</code></div>
+        </div>
+      </div>
+    </div>
+    <div class="missing-spec">
+      <strong>Figma spec to implement:</strong>
+      280 × 96px · white background · 1px navy border (INSIDE) · border-radius 12px · horizontal layout<br>
+      <strong>Image block:</strong> 96 × 96px fixed · background color/image-bg (#C7C9CE)<br>
+      <strong>Content block:</strong> fills remaining width · padding 8px top/bottom (space/sm), 16px left/right (space/md) · gap 4px (space/xs) · vertical layout, vertically centered
+    </div>
+    <table class="diff-table">
+      <thead>
+        <tr>
+          <th style="width:18%">Property</th>
+          <th style="width:30%">Figma value</th>
+          <th style="width:30%">Code value</th>
+          <th style="width:12%">Token</th>
+          <th style="width:10%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-miss">
+          <td>component</td>
+          <td>contact-card (node 30:62)</td>
+          <td>—</td>
+          <td>—</td>
+          <td class="status-icon">🔴</td>
+        </tr>
+        <tr class="row-miss">
+          <td>width</td>
+          <td><code>280px</code><div class="token-name">size/contact-card-width</div></td>
+          <td>—</td>
+          <td>size/contact-card-width</td>
+          <td class="status-icon">🔴</td>
+        </tr>
+        <tr class="row-miss">
+          <td>height</td>
+          <td><code>96px</code><div class="token-name">FIXED</div></td>
+          <td>—</td>
+          <td>—</td>
+          <td class="status-icon">🔴</td>
+        </tr>
+        <tr class="row-miss">
+          <td>border</td>
+          <td><code>1px #1B2A4E · INSIDE</code><div class="token-name">size/border · color/navy</div></td>
+          <td>—</td>
+          <td>—</td>
+          <td class="status-icon">🔴</td>
+        </tr>
+        <tr class="row-miss">
+          <td>border-radius</td>
+          <td><code>12px</code><div class="token-name">radius/lg</div></td>
+          <td>—</td>
+          <td>—</td>
+          <td class="status-icon">🔴</td>
+        </tr>
+        <tr class="row-miss">
+          <td>image size</td>
+          <td><code>96 × 96px</code><div class="token-name">size/contact-card-image-size</div></td>
+          <td>—</td>
+          <td>—</td>
+          <td class="status-icon">🔴</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       UNUSED TOKENS
+  ═══════════════════════════════════════════════════ -->
+  <div class="unused-section">
+    <div class="unused-header">⚪ Unused tokens</div>
+    <table class="diff-table">
+      <thead>
+        <tr>
+          <th style="width:25%">Token</th>
+          <th style="width:20%">Value</th>
+          <th style="width:35%">Note</th>
+          <th style="width:20%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-unused">
+          <td>--size-button-height</td>
+          <td><code>40px</code></td>
+          <td>Defined in both Figma (VariableID:12:19) and <code>tokens.css</code>, but not bound to the button in Figma (uses HUG sizing) and not referenced in <code>Button.module.css</code>.</td>
+          <td class="status-icon">⚪</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>
