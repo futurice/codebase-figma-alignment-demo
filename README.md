@@ -19,8 +19,7 @@ A small demo showing how an AI agent can detect inconsistencies between a
     header, round-button).
   - [src/tokens.css](src/tokens.css) — design tokens (colors, spacing, radius,
     typography, sizes) the agent uses as the source of truth when comparing.
-- Figma file: [Codebase-Figma-Demo](https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/Codebase-Figma-Demo)
-  (file key `i3MTtBKiPbLq7bEIJqL4yc`).
+- Figma file: [Codebase-Figma-Demo](https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/Codebase-Figma-Demo).
 
 ## Setup
 
