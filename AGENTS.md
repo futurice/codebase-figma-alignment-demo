@@ -119,21 +119,41 @@ One line only. No multi-line blocks. Skip components that exist only in Figma
 
 ### Figma comments
 
-For every mismatch reported, post a Figma comment on the corresponding node:
+For every mismatch reported, post a Figma comment on the corresponding node
+using the helper script in this repo:
 
+```bash
+python3 scripts/post-figma-comments.py report-assets/figma-comments.json
 ```
-POST https://api.figma.com/v1/files/i3MTtBKiPbLq7bEIJqL4yc/comments
-Header: X-Figma-Token: $FIGMA_API_KEY
-Body:   {"message":"[design-check] <reason + action>","client_meta":{"node_id":"<id>","node_offset":{"x":0,"y":0}}}
+
+Write the findings into `report-assets/figma-comments.json` first (overwrite
+any existing file). Shape:
+
+```json
+[
+  {
+    "node_id": "30:62",
+    "message": "[design-check] <reason + action>",
+    "node_offset": {"x": 0, "y": 0}
+  }
+]
 ```
+
+The script reads `FIGMA_API_KEY` from `.env`, deletes any prior
+`[design-check]` comment on each node so re-runs don't duplicate, and posts
+the new ones via the Figma REST API. `node_offset` is optional and defaults
+to `{x:0, y:0}`; use a small negative offset for container frames so the pin
+doesn't visually overlap the first child.
 
 Every message must start with `[design-check]` so duplicates can be detected.
+The token must have the `file_comments:write` scope.
 
 ### Commit and push
 
 After the report, code TODOs, assets, and Figma comments are in place, commit
-the changes (`figma-code-audit.html`, `report-assets/**`, code TODO edits)
-and push to the current branch. Do not include `.env` or local-only files.
+the changes (`figma-code-audit.html`, `report-assets/**` — including
+`figma-comments.json`, code TODO edits) and push to the current branch. Do
+not include `.env` or local-only files.
 
 ## House rules
 

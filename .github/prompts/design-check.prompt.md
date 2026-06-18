@@ -30,10 +30,15 @@ Steps:
    side, plus a TODO block per mismatch). Overwrite any existing report.
 8. For each inconsistency, add a single-line `TODO design-check:` comment at
    the relevant code location with a link to the Figma node.
-9. For each inconsistency, post a Figma comment via
-   `POST https://api.figma.com/v1/files/i3MTtBKiPbLq7bEIJqL4yc/comments` using
-   `FIGMA_API_KEY` from `.env`. Every message starts with `[design-check]`.
-10. Commit `figma-code-audit.html`, `report-assets/`, and the code TODO edits,
-    then push to the current branch.
+9. For each inconsistency, write a finding to
+   `report-assets/figma-comments.json` (overwriting any existing file) with
+   shape `[{"node_id":"...","message":"[design-check] ...","node_offset":{"x":0,"y":0}}]`.
+   Then post the comments with
+   `python3 scripts/post-figma-comments.py report-assets/figma-comments.json`.
+   The script reads `FIGMA_API_KEY` from `.env`, deletes prior
+   `[design-check]` comments on the same nodes, and posts the new ones.
+10. Commit `figma-code-audit.html`, `report-assets/` (PNGs and
+    `figma-comments.json`), and the code TODO edits, then push to the
+    current branch.
 
 When done, reply with a one-line summary and a link to the report.
