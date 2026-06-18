@@ -1,6 +1,6 @@
 ---
 mode: agent
-description: Compare the Figma design to the codebase and write design-alignment-report.md
+description: Compare the Figma design to the codebase and write figma-code-audit.html
 tools: ['codebase', 'editFiles', 'search', 'usages', 'figma']
 ---
 
@@ -22,7 +22,7 @@ Steps:
    - implemented vs. missing components,
    - matching component design (tokens, colors, spacing, radius, typography, sizes),
    - matching layout (structure, order, alignment, gaps — ignore text wording).
-6. Write the result to `design-alignment-report.md` at the repo root, using
+6. Write the result to `figma-code-audit.html` at the repo root, using
    exactly the format from AGENTS.md. Overwrite any existing report.
 7. Do not modify any other files.
 

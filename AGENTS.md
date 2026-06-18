@@ -40,7 +40,7 @@ Use the workspace file tools to read component source, CSS modules, and
 When the user asks for a "design check" / "alignment check" / runs the
 `/design-check` prompt, produce a single report file:
 
-**`design-alignment-report.md`** at the repo root.
+**`figma-code-audit.html`** at the repo root.
 
 Always overwrite the existing report; do not append.
 

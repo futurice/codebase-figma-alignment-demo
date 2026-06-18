@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Figma &harr; Code Audit &mdash; Codebase-Figma-Demo</title>
+    <style>
+        :root {
+            --navy: #1B2A4E;
+            --bg: #f6f7f9;
+            --card: #ffffff;
+            --border: #e5e7eb;
+            --muted: #6b7280;
+            --green: #16a34a;
+            --green-bg: #dcfce7;
+            --amber: #b45309;
+            --amber-bg: #fef3c7;
+            --red: #dc2626;
+            --red-bg: #fee2e2;
+            --code-bg: #0f172a;
+            --code-fg: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--navy);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        a {
+            color: var(--navy);
+        }
+
+        code {
+            font-family: "SF Mono", Menlo, Consolas, monospace;
+            font-size: 0.92em;
+            background: rgba(27, 42, 78, 0.06);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        header.page {
+            background: var(--navy);
+            color: #fff;
+            padding: 36px 0;
+            margin-bottom: 32px;
+        }
+
+        header.page h1 {
+            margin: 0 0 6px;
+            font-size: 26px;
+        }
+
+        header.page p {
+            margin: 0;
+            opacity: 0.85;
+            font-size: 14px;
+        }
+
+        header.page a {
+            color: #93c5fd;
+        }
+
+        .summary {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .badge.match {
+            background: var(--green-bg);
+            color: var(--green);
+        }
+
+        .badge.todo {
+            background: var(--amber-bg);
+            color: var(--amber);
+        }
+
+        .badge.miss {
+            background: var(--red-bg);
+            color: var(--red);
+        }
+
+        section {
+            margin-bottom: 48px;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin: 0 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--navy);
+        }
+
+        h3 {
+            font-size: 17px;
+            margin: 0;
+        }
+
+        h4 {
+            margin: 0 0 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        article.card-block {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .head .links {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .head .links a.link {
+            text-decoration: none;
+            font-size: 12px;
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--navy);
+        }
+
+        .head .links a.link:hover {
+            background: var(--bg);
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .preview {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+        }
+
+        .preview img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            color: var(--code-fg);
+            border-radius: 8px;
+            padding: 14px;
+            overflow-x: auto;
+            font-family: "SF Mono", Menlo, Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .code-block pre {
+            margin: 0;
+        }
+
+        .code-block code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+        table.diff {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        table.diff th,
+        table.diff td {
+            text-align: left;
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        table.diff th {
+            background: var(--bg);
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+        }
+
+        table.diff td.s {
+            width: 56px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        table.diff td.s.ok {
+            color: var(--green);
+        }
+
+        table.diff td.s.no {
+            color: var(--red);
+        }
+
+        .note {
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        .note.todo {
+            background: var(--amber-bg);
+            border-left: 3px solid var(--amber);
+        }
+
+        .note.miss {
+            background: var(--red-bg);
+            border-left: 3px solid var(--red);
+        }
+
+        .note strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .layout-grid img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+        }
+
+        footer.page {
+            color: var(--muted);
+            font-size: 12px;
+            padding: 24px 0 48px;
+        }
+
+        @media (max-width: 820px) {
+
+            .split,
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="page">
+        <div class="container">
+            <h1>Figma &harr; Code Audit</h1>
+            <p>Generated 2026-06-18 &middot; <a
+                    href="https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/Codebase-Figma-Demo">Codebase-Figma-Demo</a>
+            </p>
+            <div class="summary">
+                <span class="badge match">&#10003; 4 components match</span>
+                <span class="badge miss">&#9888; 1 missing in code</span>
+                <span class="badge miss">&#9888; 1 missing in Figma</span>
+                <span class="badge todo">&#9888; 2 layout mismatches</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <section id="components">
+            <h2>1. Component-level audit</h2>
+
+            <!-- Header -->
+            <article class="card-block">
+                <div class="head">
+                    <h3>Header</h3>
+                    <div class="links">
+                        <span class="badge match">&#10003; Match</span>
+                        <a class="link" href="https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/?node-id=16-71"
+                            target="_blank" rel="noopener">Figma &rarr;</a>
+                        <a class="link" href="src/components/header/Header.tsx">Code &rarr;</a>
+                    </div>
+                </div>
+                <div class="split">
+                    <div>
+                        <h4>Figma (node 16:71)</h4>
+                        <div class="preview"><img src="report-assets/header.png" alt="Header preview"></div>
+                    </div>
+                    <div>
+                        <h4>Code (Header.module.css)</h4>
+                        <div class="code-block">
+                            <pre><code>.header {
+  width: 100%;
+  height: var(--size-header-height);   /* 72px */
+  background: var(--color-white);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-2xl);          /* 0 64px */
+}
+.logo { font-size: var(--font-size-title); font-weight: var(--font-weight-bold); color: var(--color-navy); }
+.nav  { display: flex; align-items: center; gap: var(--space-lg); }
+.navLink { font-size: var(--font-size-nav); color: var(--color-navy); }</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <table class="diff">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Figma</th>
+                            <th>Code</th>
+                            <th class="s">&#10003;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Background</td>
+                            <td>#FFFFFF</td>
+                            <td><code>--color-white</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Height</td>
+                            <td>72px</td>
+                            <td><code>--size-header-height</code> (72px)</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Padding</td>
+                            <td>0 64px</td>
+                            <td>0 <code>--space-2xl</code> (0 64px)</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Layout</td>
+                            <td>row, space-between, align-center</td>
+                            <td>flex, justify-content: space-between, align-items: center</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Logo typography</td>
+                            <td>Inter Bold 16px, navy</td>
+                            <td><code>--font-size-title</code> + <code>--font-weight-bold</code> +
+                                <code>--color-navy</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Nav typography</td>
+                            <td>Inter Regular 14px, navy</td>
+                            <td><code>--font-size-nav</code>, weight 400, <code>--color-navy</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Nav gap</td>
+                            <td>24px</td>
+                            <td><code>--space-lg</code> (24px)</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+
+            <!-- Card -->
+            <article class="card-block">
+                <div class="head">
+                    <h3>Card</h3>
+                    <div class="links">
+                        <span class="badge match">&#10003; Match</span>
+                        <a class="link" href="https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/?node-id=16-62"
+                            target="_blank" rel="noopener">Figma &rarr;</a>
+                        <a class="link" href="src/components/card/Card.tsx">Code &rarr;</a>
+                    </div>
+                </div>
+                <div class="split">
+                    <div>
+                        <h4>Figma (node 16:62)</h4>
+                        <div class="preview"><img src="report-assets/card.png" alt="Card preview"></div>
+                    </div>
+                    <div>
+                        <h4>Code (Card.module.css)</h4>
+                        <div class="code-block">
+                            <pre><code>.card {
+  width: var(--size-card-width);        /* 320px */
+  border-radius: var(--radius-lg);      /* 12px */
+  background: var(--color-white);
+  display: flex; flex-direction: column;
+}
+.image   { height: var(--size-card-image-height); /* 160px */ }
+.content { padding: var(--space-lg); gap: var(--space-md); /* 24px / 16px */ }
+.text    { gap: var(--space-xs); /* 4px */ }
+.title       { font-size: var(--font-size-title);    font-weight: var(--font-weight-bold); }
+.description { font-size: var(--font-size-subtitle); font-weight: var(--font-weight-regular); }</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <table class="diff">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Figma</th>
+                            <th>Code</th>
+                            <th class="s">&#10003;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Width</td>
+                            <td>320px</td>
+                            <td><code>--size-card-width</code> (320px)</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Border radius</td>
+                            <td>12px</td>
+                            <td><code>--radius-lg</code> (12px)</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Image height</td>
+                            <td>160px</td>
+                            <td><code>--size-card-image-height</code> (160px)</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Content padding</td>
+                            <td>24px</td>
+                            <td><code>--space-lg</code> (24px)</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Content gap</td>
+                            <td>16px</td>
+                            <td><code>--space-md</code> (16px)</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Text gap</td>
+                            <td>4px</td>
+                            <td><code>--space-xs</code> (4px)</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Title typography</td>
+                            <td>Inter Bold 16px, navy</td>
+                            <td><code>--font-size-title</code> + <code>--font-weight-bold</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Description typography</td>
+                            <td>Inter Regular 12px, navy</td>
+                            <td><code>--font-size-subtitle</code> + <code>--font-weight-regular</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+
+            <!-- Button -->
+            <article class="card-block">
+                <div class="head">
+                    <h3>Button (primary + secondary)</h3>
+                    <div class="links">
+                        <span class="badge match">&#10003; Match</span>
+                        <a class="link" href="https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/?node-id=16-61"
+                            target="_blank" rel="noopener">Figma &rarr;</a>
+                        <a class="link" href="src/components/button/Button.tsx">Code &rarr;</a>
+                    </div>
+                </div>
+                <div class="split">
+                    <div>
+                        <h4>Figma (component set 16:61)</h4>
+                        <div class="preview"><img src="report-assets/button.png" alt="Button preview"></div>
+                    </div>
+                    <div>
+                        <h4>Code (Button.module.css)</h4>
+                        <div class="code-block">
+                            <pre><code>.button {
+  padding: var(--space-sm) var(--space-md);   /* 8px 16px */
+  gap: var(--space-sm);                        /* 8px */
+  border-radius: var(--radius-md);             /* 8px */
+  font-size: var(--font-size-body);            /* 14px */
+  font-weight: var(--font-weight-semibold);    /* 600 */
+  border: var(--size-border) solid transparent;
+}
+.primary   { background: var(--color-navy);  color: var(--color-white); }
+.secondary { background: var(--color-white); color: var(--color-navy);
+             border-color: var(--color-navy); }</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <table class="diff">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Figma</th>
+                            <th>Code</th>
+                            <th class="s">&#10003;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Padding</td>
+                            <td>8px 16px</td>
+                            <td><code>--space-sm --space-md</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Gap</td>
+                            <td>8px</td>
+                            <td><code>--space-sm</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Border radius</td>
+                            <td>8px</td>
+                            <td><code>--radius-md</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Typography</td>
+                            <td>Inter Semi Bold 14px</td>
+                            <td><code>--font-size-body</code> + <code>--font-weight-semibold</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Primary colors</td>
+                            <td>bg navy, text white</td>
+                            <td><code>--color-navy</code> / <code>--color-white</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Secondary colors</td>
+                            <td>bg white, text navy, 1px navy stroke</td>
+                            <td><code>--color-white</code> / <code>--color-navy</code> / 1px navy</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+
+            <!-- Footer -->
+            <article class="card-block">
+                <div class="head">
+                    <h3>Footer</h3>
+                    <div class="links">
+                        <span class="badge match">&#10003; Match</span>
+                        <a class="link" href="https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/?node-id=16-77"
+                            target="_blank" rel="noopener">Figma &rarr;</a>
+                        <a class="link" href="src/components/footer/Footer.tsx">Code &rarr;</a>
+                    </div>
+                </div>
+                <div class="split">
+                    <div>
+                        <h4>Figma (node 16:77)</h4>
+                        <div class="preview"><img src="report-assets/footer.png" alt="Footer preview"></div>
+                    </div>
+                    <div>
+                        <h4>Code (Footer.module.css)</h4>
+                        <div class="code-block">
+                            <pre><code>.footer {
+  width: 100%;
+  height: var(--size-footer-height);   /* 80px */
+  background: var(--color-navy);
+  color: var(--color-white);
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 var(--space-2xl);          /* 0 64px */
+  font-size: var(--font-size-body);
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <table class="diff">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Figma</th>
+                            <th>Code</th>
+                            <th class="s">&#10003;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Background</td>
+                            <td>#1B2A4E (navy)</td>
+                            <td><code>--color-navy</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Text color</td>
+                            <td>#FFFFFF</td>
+                            <td><code>--color-white</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Height</td>
+                            <td>80px</td>
+                            <td><code>--size-footer-height</code> (80px)</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Padding</td>
+                            <td>0 64px</td>
+                            <td>0 <code>--space-2xl</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Layout</td>
+                            <td>row, justify center, align center</td>
+                            <td>flex, justify-center, align-center</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Typography</td>
+                            <td>Inter Regular 14px</td>
+                            <td><code>--font-size-body</code>, weight 400</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+
+            <!-- contact-card (Figma only) -->
+            <article class="card-block">
+                <div class="head">
+                    <h3>contact-card</h3>
+                    <div class="links">
+                        <span class="badge miss">&#9888; Missing in code</span>
+                        <a class="link" href="https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/?node-id=30-62"
+                            target="_blank" rel="noopener">Figma &rarr;</a>
+                    </div>
+                </div>
+                <div class="split">
+                    <div>
+                        <h4>Figma (node 30:62)</h4>
+                        <div class="preview"><img src="report-assets/contact-card.png" alt="contact-card preview"></div>
+                    </div>
+                    <div>
+                        <h4>Code</h4>
+                        <div class="note miss">
+                            <strong>No matching component.</strong>
+                            Nothing under <code>src/components/</code> implements <code>contact-card</code>.
+                        </div>
+                    </div>
+                </div>
+                <div class="note todo">
+                    <strong>TODO &mdash; implement or deprecate</strong>
+                    Add a <code>ContactCard</code> in <code>src/components/contact-card/</code> matching the Figma spec
+                    (280&times;96, white bg, 1px navy stroke, 12px radius, 96&times;96 image, content padding 8px 16px,
+                    gap 4px; fields: name &mdash; Inter Bold 16px, title &mdash; Inter Regular 12px,
+                    phone + email &mdash; Inter Regular 14px, all navy). Or, if the design is deprecated, remove it from
+                    Figma.
+                </div>
+            </article>
+
+            <!-- RoundButton (code only) -->
+            <article class="card-block">
+                <div class="head">
+                    <h3>RoundButton</h3>
+                    <div class="links">
+                        <span class="badge miss">&#9888; Missing in Figma</span>
+                        <a class="link" href="src/components/round-button/RoundButton.tsx">Code &rarr;</a>
+                    </div>
+                </div>
+                <div class="split">
+                    <div>
+                        <h4>Figma</h4>
+                        <div class="note miss">
+                            <strong>No matching component.</strong>
+                            No <code>round-button</code> component in the Figma file.
+                        </div>
+                    </div>
+                    <div>
+                        <h4>Code (RoundButton.module.css)</h4>
+                        <div class="code-block">
+                            <pre><code>.roundButton {
+  width: 40px;          /* hardcoded */
+  height: 40px;         /* hardcoded */
+  border-radius: 50%;
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="note todo">
+                    <strong>TODO &mdash; align Figma or remove from code</strong>
+                    Either add a <code>round-button</code> component to Figma so the design is documented,
+                    or remove <code>RoundButton</code> from the codebase if it is unused. Also: replace the
+                    hardcoded <code>40px</code> with <code>var(--size-button-height)</code>.
+                </div>
+            </article>
+
+        </section>
+
+        <section id="layout">
+            <h2>2. Page layout audit</h2>
+
+            <article class="card-block">
+                <div class="head">
+                    <h3>Home page</h3>
+                    <div class="links">
+                        <span class="badge todo">&#9888; 2 mismatches</span>
+                        <a class="link" href="https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/?node-id=16-79"
+                            target="_blank" rel="noopener">Figma &rarr;</a>
+                        <a class="link" href="src/pages/home/index.tsx">Code &rarr;</a>
+                    </div>
+                </div>
+                <div class="layout-grid">
+                    <div>
+                        <h4>Figma &mdash; Home canvas (1440px)</h4>
+                        <img src="report-assets/home-layout.png" alt="Home page in Figma">
+                    </div>
+                    <div>
+                        <h4>Code structure</h4>
+                        <div class="code-block">
+                            <pre><code>App.tsx
+&#9492;&#9472; &lt;div class="app"&gt;
+   &#9500;&#9472; &lt;Header /&gt;
+   &#9500;&#9472; &lt;main class="main"&gt;
+   &#9474;  &#9492;&#9472; &lt;Home /&gt;        // pages/home/index.tsx
+   &#9474;     &#9492;&#9472; &lt;div class="grid"&gt;
+   &#9474;        &#9492;&#9472; 6&times; &lt;Card /&gt;
+   &#9492;&#9472; &lt;Footer /&gt;</code></pre>
+                        </div>
+                        <h4 style="margin-top:14px">Grid CSS</h4>
+                        <div class="code-block">
+                            <pre><code>.grid {
+  display: grid;
+  grid-template-columns: repeat(2, var(--size-card-width));
+  column-gap: var(--space-2xl);   /* 64px */
+  row-gap: var(--space-xl);       /* 40px */
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="diff" style="margin-top:16px">
+                    <thead>
+                        <tr>
+                            <th>Property</th>
+                            <th>Figma</th>
+                            <th>Code</th>
+                            <th class="s">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Top-level structure</td>
+                            <td>header &rarr; main &rarr; footer (column)</td>
+                            <td>same</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Page background</td>
+                            <td>#E5E7EB</td>
+                            <td><code>--color-page-bg</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Main padding</td>
+                            <td>64px 40px, centered</td>
+                            <td><code>--space-2xl --space-xl</code>, centered</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Card grid gaps</td>
+                            <td>row 40px, col 64px</td>
+                            <td><code>row-gap --space-xl</code>, <code>column-gap --space-2xl</code></td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Card count</td>
+                            <td>6</td>
+                            <td>6</td>
+                            <td class="s ok">&#10003;</td>
+                        </tr>
+                        <tr>
+                            <td>Card grid fill order</td>
+                            <td>column-major: [1][4]/[2][5]/[3][6]</td>
+                            <td>row-major: [1][2]/[3][4]/[5][6]</td>
+                            <td class="s no">&#10007;</td>
+                        </tr>
+                        <tr>
+                            <td>Card #3 button variant</td>
+                            <td>primary</td>
+                            <td>secondary (<code>i === 2</code>)</td>
+                            <td class="s no">&#10007;</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="note todo">
+                    <strong>TODO #1 &mdash; Card grid fill order</strong>
+                    Figma renders the cards top-to-bottom in two columns (col 1 = cards 1,2,3; col 2 = cards 4,5,6).
+                    Code's CSS Grid fills row by row, so cards 2&ndash;5 land in different positions on screen.
+                    Fix in <a href="src/pages/home/index.module.css">src/pages/home/index.module.css</a>:
+                    add <code>grid-auto-flow: column</code> + <code>grid-template-rows: repeat(3, auto)</code>,
+                    or restructure into two flex columns to mirror Figma's structure.
+                </div>
+
+                <div class="note todo">
+                    <strong>TODO #2 &mdash; Card #3 button variant</strong>
+                    All 6 cards in the canonical <em>Home</em> canvas (#16:79) use the primary button.
+                    Code in <a href="src/pages/home/index.tsx">src/pages/home/index.tsx</a> renders the third card
+                    with the secondary variant via <code>variant={i === 2 ? 'secondary' : 'primary'}</code>.
+                    Either remove the special case in code, or treat the &ldquo;Home (with Design variation)&rdquo;
+                    canvas
+                    (#48:57) as canonical and update the <em>Home</em> canvas to match.
+                </div>
+            </article>
+        </section>
+
+        <footer class="page">
+            <div class="container">
+                Findings are also surfaced as Figma comments tagged <code>[design-check]</code> on the
+                relevant nodes. Re-run the <code>/design-check</code> prompt to regenerate this report.
+            </div>
+        </footer>
+
+    </div>
+</body>
+
+</html>

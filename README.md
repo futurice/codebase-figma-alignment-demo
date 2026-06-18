@@ -8,7 +8,7 @@ A small demo showing how an AI agent can detect inconsistencies between a
 
 [Figma](https://www.figma.com/design/i3MTtBKiPbLq7bEIJqL4yc/Codebase-Figma-Demo)
 
-[Inconsistencies report](design-alignment-report.md)
+[Inconsistencies report](figma-code-audit.html)
 
 ## Project overview
 
@@ -43,7 +43,7 @@ pnpm dev
 
 3. In Chat (agent mode), run the `/design-check` prompt. The agent reads
    [AGENTS.md](AGENTS.md) for the rules and writes the report to
-   [Inconsistencies report](design-alignment-report.md). Commit the
+   [Inconsistencies report](figma-code-audit.html). Commit the
    updated report when you're happy with it.
 
 ## How it works
