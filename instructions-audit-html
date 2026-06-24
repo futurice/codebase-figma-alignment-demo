@@ -1,0 +1,66 @@
+---
+ 
+## Step 9 — Generate the HTML report
+ 
+Write a single self-contained `.html` file to the output path. No external
+dependencies — all images are base64 inline, all styles are in a `<style>` block.
+ 
+### Page structure
+ 
+```
+<header>
+  Figma ↔ Code Audit
+  File: [name]   Node: [id]   Generated: [date]
+</header>
+ 
+<summary-bar>
+  ✅ N  🟠 N  🟡 N  🔴 N  ⚪ N
+</summary-bar>
+ 
+[for each matched component]
+<component-card>
+  <card-header>
+    ComponentName        <pill>N issues</pill>
+  </card-header>
+  <panels>
+    <panel label="Figma">
+      <img src="data:image/png;base64,..." />
+    </panel>
+    <panel label="Code">
+      [inline HTML preview from Step 8]
+    </panel>
+  </panels>
+  <diff-table>
+    property | Figma value (token) | Code value (token) | ✅/🟠/🟡/🔴/⚪
+  </diff-table>
+</component-card>
+ 
+[missing components section — red cards, one panel only]
+[unused tokens section — grey table]
+```
+ 
+### Styling rules
+ 
+- Page background: `#f5f5f5`; max content width `1200px`, centered
+- Component cards: white, `border-radius: 8px`, `box-shadow: 0 1px 4px rgba(0,0,0,.08)`, `margin-bottom: 24px`
+- Panel label ("Figma" / "Code"): uppercase, `font-size: 11px`, `letter-spacing: .05em`, `color: #6b7280`; panel background `#f9fafb`; both panels equal width, `min-height: 120px`, content centered
+- Diff table rows colour-coded:
+  - ✅ `background: #f0fdf4`
+  - 🟠 `background: #fff7ed; border-left: 3px solid #f97316`
+  - 🟡 `background: #fefce8; border-left: 3px solid #eab308`
+  - 🔴 `background: #fef2f2; border-left: 3px solid #ef4444`
+  - ⚪ `background: #f9fafb`
+- Issue badge on card header: small pill, `background: #f97316; color: white` if any
+  🟠/🟡, `background: #ef4444` if any 🔴, hidden if all ✅
+- Missing component cards: full-width, red-tinted header, left panel shows Figma
+  screenshot or extracted spec, right panel shows a grey "Not implemented in code"
+  placeholder box
+### Callout badges on previews
+ 
+Where a property is flagged 🟠 or 🔴, add a small floating badge on the affected
+preview panel to draw the eye to the specific discrepancy. Wrap the preview in
+`position: relative` and add `position: absolute` badges (e.g. `"height ≠"`,
+`"border ≠"`) near the relevant area. Keep badges visually small and use the same
+orange/red colour as the diff table rows.
+ 
+---
